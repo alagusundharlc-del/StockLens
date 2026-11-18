@@ -36,10 +36,11 @@ module.exports = async (req, res) => {
 ${JSON.stringify(req.body)}
 Reply in concise markdown, under 220 words:
 1) Current profit/loss with percentages
-2) Predicted profit/loss: interpret probability of profit, expected value and the 5th–95th percentile range
+2) Forecast: distinguish expectedPL (mean) from medianPL (median). Explain p5PL and p95PL as percentiles, never as caps, limits, guarantees, or worst/best possible outcomes. Describe probProfitPct as a probability within this simulation, not certainty.
 3) Risk: volatility and diversification
-4) Per-stock outlook (Bullish/Neutral/Bearish + one-line reason)
-5) One suggestion
+4) Per-stock outlook (Bullish/Neutral/Bearish + one-line reason) based only on supplied statistics.
+5) One general risk-management suggestion.
+Use only the supplied data; do not invent market facts, news, causes, or correlations. Describe historical statistics as estimates, not evidence of future momentum. If diversification cannot be assessed from the data, say so.
 End with "Not financial advice."`;
   const p = PROVIDERS.find(([k]) => E[k]);
   if (!p) return res.json({ text: 'No AI key found. Add GEMINI_API_KEY (or GROQ_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY) in Vercel → Settings → Environment Variables, then redeploy.' });
