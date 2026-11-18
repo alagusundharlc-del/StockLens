@@ -1,4 +1,4 @@
-// Free Yahoo Finance endpoints (unofficial, no key). Works for NSE (.NS), BSE (.BO) and US stocks.
+// Vercel serverless function for Yahoo Finance endpoints (unofficial, no key).
 const H = { 'User-Agent': 'Mozilla/5.0' };
 const HOSTS = ['https://query1.finance.yahoo.com', 'https://query2.finance.yahoo.com'];
 const yf = async path => { for (const h of HOSTS) { try { const r = await fetch(h + path, { headers: H }); if (r.ok) return await r.json(); } catch {} } throw new Error('Yahoo unavailable'); };

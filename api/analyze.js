@@ -1,4 +1,4 @@
-// AI provider is chosen by whichever key you set in Vercel env vars (first match wins):
+// Vercel serverless function. AI provider is chosen by whichever key you set in Vercel env vars (first match wins):
 // GEMINI_API_KEY | GROQ_API_KEY | OPENAI_API_KEY | ANTHROPIC_API_KEY   (optional: AI_MODEL to override the model)
 const E = process.env;
 const post = async (url, headers, body) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) })).json();
