@@ -16,6 +16,8 @@ main{margin-top:-40px}
 h2{font:600 19px Georgia,serif;color:var(--forest);margin:0 0 12px}
 input,select{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:#fff;color:var(--tx);transition:border .2s,box-shadow .2s}
 input:focus,select:focus{outline:0;border-color:var(--forest);box-shadow:0 0 0 3px rgba(47,107,79,.15)}
+.field{display:flex;flex-direction:column;gap:4px}.field-error{display:none;color:var(--terra2);font-size:12px;line-height:1.25}.field-error.visible{display:block}
+input[aria-invalid=true]{border-color:var(--terra2)}
 button{font:inherit;font-weight:600;padding:10px 18px;border-radius:10px;border:0;background:var(--forest);color:var(--cream);cursor:pointer;transition:transform .15s,background .2s}
 button:hover{background:var(--forest2);transform:translateY(-1px)}button:active{transform:scale(.97)}
 button.acc{background:var(--terra)}button.acc:hover{background:var(--terra2)}
@@ -33,6 +35,7 @@ tbody tr{animation:fade .5s both;transition:background .2s}tbody tr:hover{backgr
 svg text{font:11px system-ui;fill:var(--mu)}.ln{fill:none;stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2s .2s forwards}
 .band{opacity:0;animation:fade 1.2s 1.2s forwards}
 #ai{white-space:pre-wrap;line-height:1.6;margin-top:12px;padding:14px;border-left:4px solid var(--terra);background:var(--cream);border-radius:0 12px 12px 0;display:none;animation:up .5s both}
+.ai-error{color:var(--terra2)}
 .load{animation:pulse 1s infinite}.sp{width:100%;height:28px}
 @keyframes fade{from{opacity:0}to{opacity:1}}@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes grow{to{width:var(--w)}}
@@ -45,7 +48,7 @@ svg text{font:11px system-ui;fill:var(--mu)}.ln{fill:none;stroke-width:2.5;strok
 <div class="card"><h2>Market watch</h2><div class="tbl"><table id="mkt"></table></div></div>
 
 <div class="card" id="stock-analyzer"><h2>Stock analyzer</h2>
-<div class="row"><div class="rel"><input id="ps" placeholder="Type a company, e.g. Reliance, Apple…" style="width:290px" autocomplete="off"><div id="sg"></div></div><input id="pq" type="number" placeholder="Qty" style="width:90px"><input id="pb" type="number" placeholder="Buy price" style="width:120px"><button id="add">Add stock</button></div>
+<div class="row"><div class="field"><div class="rel"><input id="ps" placeholder="Type a company, e.g. Reliance, Apple…" style="width:290px" autocomplete="off" aria-describedby="ps-error"><div id="sg"></div></div><small class="field-error" id="ps-error" aria-live="polite"></small></div><div class="field"><input id="pq" type="number" min="0" step="any" placeholder="Qty" style="width:90px" aria-describedby="pq-error"><small class="field-error" id="pq-error" aria-live="polite"></small></div><div class="field"><input id="pb" type="number" min="0" step="any" placeholder="Buy price" style="width:120px" aria-describedby="pb-error"><small class="field-error" id="pb-error" aria-live="polite"></small></div><button id="add">Add stock</button></div>
 <div class="sum" id="sum"></div><div class="tbl"><table id="pf"></table></div>
 <h2 style="margin-top:20px">Profit / loss by stock</h2><div id="bars"></div></div>
 
@@ -75,13 +78,17 @@ let t;$('q').oninput=e=>{clearTimeout(t);const v=e.target.value.trim();if(!v)ret
  t=setTimeout(async()=>{const r=await find(v);
  $('res').innerHTML=r.map(x=>`<div><span>${x.name} <span class=mu>${x.symbol}</span></span><button class=s onclick="pick('${x.symbol}')">+ Add</button></div>`).join('')||'<p class=mu>No match — try the exact symbol, e.g. TCS.NS</p>'},350)};
 const pick=s=>{choose(s,s);$('ps').scrollIntoView({behavior:'smooth',block:'center'})};
-let t2;$('ps').oninput=e=>{delete e.target.dataset.sym;clearTimeout(t2);const v=e.target.value.trim();if(v.length<1)return $('sg').innerHTML='';
+const setFieldError=(id,message)=>{const input=$(id),error=$(id+'-error');error.textContent=message;error.classList.toggle('visible',Boolean(message));if(message)input.setAttribute('aria-invalid','true');else input.removeAttribute('aria-invalid')};
+let t2;$('ps').oninput=e=>{setFieldError('ps','');delete e.target.dataset.sym;clearTimeout(t2);const v=e.target.value.trim();if(v.length<1)return $('sg').innerHTML='';
  t2=setTimeout(async()=>{const r=await find(v);
  $('sg').innerHTML=r.map(x=>`<div onclick="choose('${x.symbol}','${x.name.replace(/['"]/g,'')}')"><b>${x.symbol}</b> <span class=mu>${x.name}</span></div>`).join('')},300)};
-const choose=(s,n)=>{$('ps').value=n==s?s:n+' ('+s+')';$('ps').dataset.sym=s;$('sg').innerHTML='';$('pq').focus()};
+['pq','pb'].forEach(id=>$(id).addEventListener('input',e=>{const value=e.currentTarget.value;setFieldError(id,value!==''&&Number(value)<0?'Value cannot be negative.':'')}));
+const choose=(s,n)=>{$('ps').value=n==s?s:n+' ('+s+')';$('ps').dataset.sym=s;setFieldError('ps','');$('sg').innerHTML='';$('pq').focus()};
 document.addEventListener('click',e=>{if(!e.target.closest('.rel'))$('sg').innerHTML=''});
 $('add').onclick=async()=>{let s=$('ps').dataset.sym;const v=$('ps').value.trim(),q=+$('pq').value,b=+$('pb').value;
- if(!v||q<=0||b<=0)return alert('Enter a company, quantity and buy price');
+ const errors={ps:v?'':'Choose or enter a company.',pq:!$('pq').value?'Enter a quantity.':!Number.isFinite(q)?'Enter a valid quantity.':q<0?'Value cannot be negative.':q===0?'Quantity must be greater than 0.':'',pb:!$('pb').value?'Enter a buy price.':!Number.isFinite(b)?'Enter a valid buy price.':b<0?'Value cannot be negative.':b===0?'Buy price must be greater than 0.':''};
+ Object.entries(errors).forEach(([id,message])=>setFieldError(id,message));
+ const firstInvalid=Object.keys(errors).find(id=>errors[id]);if(firstInvalid){$(firstInvalid).focus();return}
  if(!s){const r=await find(v);s=r[0]?.symbol||v.toUpperCase()}
  pf.push({s,q,b});save();$('ps').value=$('pq').value=$('pb').value='';delete $('ps').dataset.sym};
 const save=()=>{localStorage.setItem('pf',JSON.stringify(pf));render()},del=i=>{pf.splice(i,1);save()};
@@ -133,9 +140,9 @@ function forecast(ok,inv,cur,P){
   forecast:{tradingDays:H,probProfitPct:+pp.toFixed(1),expectedPL:+(exp-inv).toFixed(0),p5PL:+(S.p5[H]-inv).toFixed(0),medianPL:+(S.p50[H]-inv).toFixed(0),p95PL:+(S.p95[H]-inv).toFixed(0),dailyMu:S.mu,dailySigma:S.s}}}
 $('hz').onchange=render;
 
-$('an').onclick=async()=>{if(!ctx)return alert('Add at least one stock first');const a=$('ai');a.style.display='block';a.className='load';a.textContent='Analyzing the selected stocks…';
+$('an').onclick=async()=>{const a=$('ai');if(!ctx){a.style.display='block';a.className='ai-error';a.textContent='Add at least one valid stock before analyzing.';$('ps').focus();return}a.style.display='block';a.className='load';a.textContent='Analyzing the selected stocks…';
  try{const r=await(await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ctx)})).json();a.className='';a.textContent=r.text}
- catch{a.className='';a.textContent='Could not reach the analysis service.'}};
+ catch{a.className='ai-error';a.textContent='Could not reach the analysis service.'}};
 
 market();render();setInterval(market,60000);
 </script></body></html>
