@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StockLens — Stock Analyzer</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232F6B4F'/%3E%3Cpath d='M5 22l7-8 5 5 10-12' stroke='%23F7F3EA' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{--cream:#F7F3EA;--card:#FFFCF5;--forest:#2F6B4F;--forest2:#24523d;--terra:#C4704B;--terra2:#A9542F;--tx:#2b2f2a;--mu:#7a7f73;--bd:#e6dfcd}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:var(--cream);color:var(--tx)}
+header{background:var(--forest);color:var(--cream);padding:26px 16px 62px;animation:fade .8s both}
+.w{max-width:1040px;margin:auto;padding:0 16px}h1{margin:0;font:700 30px Georgia,serif;letter-spacing:.3px}header p{margin:4px 0 0;opacity:.8}
+.logo{vertical-align:-7px;margin-right:6px}.logo rect{transform-box:fill-box;transform-origin:bottom;animation:tick 2.4s ease-in-out infinite}.logo .c2{animation-delay:.3s}.logo .c3{animation-delay:.6s}
+.rel{position:relative}#sg{position:absolute;top:100%;left:0;min-width:300px;z-index:5;background:#fff;border:1px solid var(--bd);border-radius:10px;box-shadow:0 10px 24px rgba(47,107,79,.15);overflow:hidden}#sg div{padding:9px 12px;cursor:pointer;animation:up .25s both}#sg div:hover{background:var(--cream)}
+main{margin-top:-40px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(47,107,79,.07);animation:up .7s both;transition:transform .25s,box-shadow .25s}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(47,107,79,.13)}
+.card:nth-child(2){animation-delay:.1s}.card:nth-child(3){animation-delay:.2s}.card:nth-child(4){animation-delay:.3s}
+h2{font:600 19px Georgia,serif;color:var(--forest);margin:0 0 12px}
+input,select{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:#fff;color:var(--tx);transition:border .2s,box-shadow .2s}
+input:focus,select:focus{outline:0;border-color:var(--forest);box-shadow:0 0 0 3px rgba(47,107,79,.15)}
+button{font:inherit;font-weight:600;padding:10px 18px;border-radius:10px;border:0;background:var(--forest);color:var(--cream);cursor:pointer;transition:transform .15s,background .2s}
+button:hover{background:var(--forest2);transform:translateY(-1px)}button:active{transform:scale(.97)}
+button.acc{background:var(--terra)}button.acc:hover{background:var(--terra2)}
+button.s{background:none;color:var(--terra);border:1px solid var(--terra);padding:4px 10px;font-size:13px}button.s:hover{background:var(--terra);color:#fff}
+#q{width:100%;font-size:16px;padding:13px 16px}
+table{width:100%;border-collapse:collapse}td,th{padding:9px 6px;text-align:right;border-bottom:1px solid var(--bd)}
+td:first-child,th:first-child{text-align:left}th{color:var(--mu);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+tbody tr{animation:fade .5s both;transition:background .2s}tbody tr:hover{background:rgba(47,107,79,.05)}
+.g{color:var(--forest)}.r{color:var(--terra2)}.mu{color:var(--mu);font-size:12px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tbl{overflow-x:auto}
+#res div{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);animation:up .3s both}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.k{background:var(--cream);border:1px solid var(--bd);border-radius:12px;padding:12px;animation:pop .5s both}.k b{display:block;font:700 22px Georgia,serif}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0}.bar>span:first-child{width:110px;font-size:13px}
+.bar i{display:block;height:14px;border-radius:7px;width:0;animation:grow 1s .2s forwards;background:var(--forest)}.bar i.l{background:var(--terra)}
+svg text{font:11px system-ui;fill:var(--mu)}.ln{fill:none;stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 2s .2s forwards}
+.band{opacity:0;animation:fade 1.2s 1.2s forwards}
+#ai{white-space:pre-wrap;line-height:1.6;margin-top:12px;padding:14px;border-left:4px solid var(--terra);background:var(--cream);border-radius:0 12px 12px 0;display:none;animation:up .5s both}
+.load{animation:pulse 1s infinite}.sp{width:100%;height:28px}
+@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}@keyframes grow{to{width:var(--w)}}
+@keyframes draw{to{stroke-dashoffset:0}}@keyframes tick{50%{transform:scaleY(.6)}}@keyframes pulse{50%{opacity:.4}}
+</style></head><body>
+<header><div class="w"><h1><svg class="logo" viewBox="0 0 32 32" width="34" height="34"><g stroke="#F7F3EA" stroke-width="2" stroke-linecap="round"><path d="M7 5v22M16 9v18M25 3v20"/></g><rect class="c1" x="4" y="11" width="6" height="10" rx="1.5" fill="#C4704B"/><rect class="c2" x="13" y="14" width="6" height="9" rx="1.5" fill="#F7F3EA"/><rect class="c3" x="22" y="7" width="6" height="11" rx="1.5" fill="#C4704B"/></svg> StockLens</h1><p>Open-source stock analyzer — statistics, stochastic probability &amp; AI.</p></div></header>
+<main class="w">
+<div class="card"><input id="q" placeholder="🔍  Search stocks — Reliance, TCS, Apple, Tesla…" autocomplete="off"><div id="res"></div></div>
+
+<div class="card"><h2>Market watch</h2><div class="tbl"><table id="mkt"></table></div></div>
+
+<div class="card"><h2>Stock analyzer</h2>
+<div class="row"><div class="rel"><input id="ps" placeholder="Type a company, e.g. Reliance, Apple…" style="width:290px" autocomplete="off"><div id="sg"></div></div><input id="pq" type="number" placeholder="Qty" style="width:90px"><input id="pb" type="number" placeholder="Buy price" style="width:120px"><button id="add">Add stock</button></div>
+<div class="sum" id="sum"></div><div class="tbl"><table id="pf"></table></div>
+<h2 style="margin-top:20px">Profit / loss by stock</h2><div id="bars"></div></div>
+
+<div class="card"><div class="row" style="justify-content:space-between"><h2>Forecast · Monte Carlo (stochastic GBM)</h2>
+<div class="row"><select id="hz"><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option></select><button id="an" class="acc">Analyze</button></div></div>
+<p class="mu" style="margin:0 0 6px">History + 2,000 simulated paths. Shaded band = 5th–95th percentile, dashed line = median, dotted = amount invested.</p>
+<div id="chart"></div><div class="sum" id="fc"></div><div id="ai"></div></div>
+</main><p class="mu" style="text-align:center;padding:10px">Educational tool, not financial advice. Forecasts assume past volatility continues.</p>
+<script>
+const $=id=>document.getElementById(id),WATCH=['^NSEI','^BSESN','RELIANCE.NS','TCS.NS','INFY.NS','HDFCBANK.NS','AAPL','MSFT','NVDA','TSLA'];
+let pf=JSON.parse(localStorage.getItem('pf')||'[]'),data={},ctx=null;
+const f=n=>n==null||isNaN(n)?'-':n.toLocaleString(undefined,{maximumFractionDigits:2}),cl=n=>n>=0?'g':'r',sg=n=>(n>=0?'+':'')+f(n);
+const get=async s=>(await fetch('/api/stock?symbols='+encodeURIComponent(s.join(',')))).json();
+const spark=c=>{if(!c||c.length<2)return'';const a=Math.min(...c),b=Math.max(...c),p=c.map((v,i)=>`${i/(c.length-1)*100},${26-(v-a)/(b-a||1)*24}`).join(' ');
+ return `<svg class=sp viewBox="0 0 100 28" preserveAspectRatio=none><polyline class=ln pathLength=1 points="${p}" stroke="${c.at(-1)>=c[0]?'#2F6B4F':'#C4704B'}" style="stroke-width:1.6"/></svg>`};
+function count(el,to,fm){const t0=performance.now();(function s(t){const p=Math.min(1,(t-t0)/900),e=1-Math.pow(1-p,3);el.textContent=fm(to*e);if(p<1)requestAnimationFrame(s)})(t0)}
+
+const POP=[['RELIANCE.NS','Reliance Industries'],['TCS.NS','Tata Consultancy Services'],['INFY.NS','Infosys'],['HDFCBANK.NS','HDFC Bank'],['ICICIBANK.NS','ICICI Bank'],['SBIN.NS','State Bank of India'],['WIPRO.NS','Wipro'],['ITC.NS','ITC'],['LT.NS','Larsen & Toubro'],['BHARTIARTL.NS','Bharti Airtel'],['TATAMOTORS.NS','Tata Motors'],['TATASTEEL.NS','Tata Steel'],['ADANIENT.NS','Adani Enterprises'],['HCLTECH.NS','HCL Technologies'],['MARUTI.NS','Maruti Suzuki'],['ZOMATO.NS','Zomato'],['AAPL','Apple'],['MSFT','Microsoft'],['GOOGL','Alphabet (Google)'],['AMZN','Amazon'],['TSLA','Tesla'],['NVDA','NVIDIA'],['META','Meta Platforms'],['NFLX','Netflix'],['AMD','AMD'],['INTC','Intel'],['JPM','JPMorgan Chase'],['KO','Coca-Cola'],['DIS','Walt Disney'],['UBER','Uber']];
+async function find(v){const l=v.toLowerCase(),r=POP.filter(x=>x[0].toLowerCase().includes(l)||x[1].toLowerCase().includes(l)).map(x=>({symbol:x[0],name:x[1]}));
+ try{const a=await(await fetch('/api/stock?q='+encodeURIComponent(v))).json();if(Array.isArray(a))a.forEach(x=>{if(!r.some(y=>y.symbol==x.symbol))r.push(x)})}catch{}
+ return r.slice(0,8)}
+async function market(){const d=await get(WATCH);
+ $('mkt').innerHTML='<thead><tr><th>Stock<th style="width:110px">30d trend<th>Price<th>Change<th>%</tr></thead><tbody>'+d.filter(x=>!x.error).map((x,i)=>{const c=x.price-x.prev,p=c/x.prev*100;
+ return `<tr style="animation-delay:${i*60}ms"><td>${x.name}<br><span class=mu>${x.symbol}</span><td>${spark(x.closes.slice(-30))}<td>${f(x.price)}<td class=${cl(c)}>${sg(c)}<td class=${cl(c)}>${sg(p)}%</tr>`}).join('')+'</tbody>'}
+
+let t;$('q').oninput=e=>{clearTimeout(t);const v=e.target.value.trim();if(!v)return $('res').innerHTML='';
+ t=setTimeout(async()=>{const r=await find(v);
+ $('res').innerHTML=r.map(x=>`<div><span>${x.name} <span class=mu>${x.symbol}</span></span><button class=s onclick="pick('${x.symbol}')">+ Add</button></div>`).join('')||'<p class=mu>No match — try the exact symbol, e.g. TCS.NS</p>'},350)};
+const pick=s=>{choose(s,s);$('ps').scrollIntoView({behavior:'smooth',block:'center'})};
+let t2;$('ps').oninput=e=>{delete e.target.dataset.sym;clearTimeout(t2);const v=e.target.value.trim();if(v.length<1)return $('sg').innerHTML='';
+ t2=setTimeout(async()=>{const r=await find(v);
+ $('sg').innerHTML=r.map(x=>`<div onclick="choose('${x.symbol}','${x.name.replace(/['"]/g,'')}')"><b>${x.symbol}</b> <span class=mu>${x.name}</span></div>`).join('')},300)};
+const choose=(s,n)=>{$('ps').value=n==s?s:n+' ('+s+')';$('ps').dataset.sym=s;$('sg').innerHTML='';$('pq').focus()};
+document.addEventListener('click',e=>{if(!e.target.closest('.rel'))$('sg').innerHTML=''});
+$('add').onclick=async()=>{let s=$('ps').dataset.sym;const v=$('ps').value.trim(),q=+$('pq').value,b=+$('pb').value;
+ if(!v||q<=0||b<=0)return alert('Enter a company, quantity and buy price');
+ if(!s){const r=await find(v);s=r[0]?.symbol||v.toUpperCase()}
+ pf.push({s,q,b});save();$('ps').value=$('pq').value=$('pb').value='';delete $('ps').dataset.sym};
+const save=()=>{localStorage.setItem('pf',JSON.stringify(pf));render()},del=i=>{pf.splice(i,1);save()};
+
+/* ---------- Applied statistics + stochastic simulation ---------- */
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length,sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1))};
+const lr=c=>c.slice(1).map((v,i)=>Math.log(v/c[i]));
+const gauss=()=>Math.sqrt(-2*Math.log(1-Math.random()))*Math.cos(2*Math.PI*Math.random());   // Box–Muller
+const pct=(s,p)=>s[Math.min(s.length-1,Math.floor(p*s.length))];
+function simulate(vals,start,H,N=2000){
+ const r=lr(vals),mu=mean(r),s=sd(r),cols=Array.from({length:H+1},()=>new Float64Array(N));
+ for(let n=0;n<N;n++){let v=start;cols[0][n]=v;for(let k=1;k<=H;k++){v*=Math.exp(mu-s*s/2+s*gauss());cols[k][n]=v}}   // GBM: S·exp((μ−σ²/2)+σZ)
+ cols.forEach(c=>c.sort());
+ return{mu,s,p5:cols.map(c=>pct(c,.05)),p50:cols.map(c=>pct(c,.5)),p95:cols.map(c=>pct(c,.95)),fin:cols[H]}}
+
+function chart(hist,fan,inv){const W=820,Ht=300,P=44,n=hist.length+fan.p50.length-1,all=[...hist,...fan.p5,...fan.p95,inv],a=Math.min(...all),b=Math.max(...all);
+ const X=i=>P+i/(n-1)*(W-2*P),Y=v=>Ht-26-(v-a)/(b-a||1)*(Ht-50),L=hist.length-1,pts=(arr,o)=>arr.map((v,i)=>`${X(o+i)},${Y(v)}`).join(' ');
+ const band=pts(fan.p95,L)+' '+fan.p5.map((v,i)=>`${X(L+i)},${Y(v)}`).reverse().join(' ');
+ return `<svg viewBox="0 0 ${W} ${Ht}" width=100%><polygon class=band points="${band}" fill="#C4704B" fill-opacity=.18/>
+ <line x1=${P} x2=${W-P} y1=${Y(inv)} y2=${Y(inv)} stroke="#7a7f73" stroke-dasharray="2 5"/><line x1=${X(L)} x2=${X(L)} y1=10 y2=${Ht-26} stroke="#e6dfcd"/>
+ <polyline class=ln pathLength=1 points="${pts(hist,0)}" stroke="#2F6B4F"/><polyline class=ln pathLength=1 points="${pts(fan.p50,L)}" stroke="#C4704B" style="stroke-dasharray:.03 .02;animation:none;stroke-dashoffset:0"/>
+ <text x=${P} y=14>${f(b)}</text><text x=${P} y=${Ht-8}>${f(a)}</text><text x=${X(L)+6} y=24>Today</text><text x=${W-P} y=${Ht-8} text-anchor=end>+${fan.p50.length-1} days</text></svg>`}
+
+async function render(){
+ if(!pf.length){$('pf').innerHTML=$('bars').innerHTML=$('chart').innerHTML=$('fc').innerHTML='';$('sum').innerHTML='<span class=mu>Add 2–3 stocks to see profit/loss &amp; forecast.</span>';ctx=null;return}
+ (await get([...new Set(pf.map(x=>x.s))])).forEach(x=>data[x.symbol]=x);
+ let inv=0,cur=0,ok=[];
+ const rows=pf.map((x,i)=>{const d=data[x.s];if(!d||d.error)return `<tr><td>${x.s}<td colspan=6 class=r>Not found<td><button class=s onclick=del(${i})>✕</button></tr>`;
+  const I=x.q*x.b,C=x.q*d.price,P=C-I,r=lr(d.closes);inv+=I;cur+=C;ok.push({...x,d,P,pc:P/I*100,vol:sd(r)*Math.sqrt(252)*100,dr:mean(r)*100});
+  return `<tr style="animation-delay:${i*70}ms"><td>${d.name}<br><span class=mu>${x.s}</span><td>${x.q}<td>${f(x.b)}<td>${f(d.price)}<td>${f(I)}<td>${f(C)}<td class=${cl(P)}>${sg(P)} (${sg(P/I*100)}%)<td><button class=s onclick=del(${i})>✕</button></tr>`}).join('');
+ $('pf').innerHTML='<thead><tr><th>Stock<th>Qty<th>Buy<th>Now<th>Invested<th>Value<th>P/L<th></tr></thead><tbody>'+rows+'</tbody>';
+ const P=cur-inv,card=(a,v,c,fm)=>`<div class=k><span class=mu>${a}</span><b class="${c}" data-v="${v}" data-f="${fm}">0</b></div>`,F={n:f,s:sg,p:v=>sg(v)+'%',r:v=>v.toFixed(3)};
+ $('sum').innerHTML=card('Invested',inv,'','n')+card('Current value',cur,'','n')+card('Total P/L',P,cl(P),'s')+card('Return',inv?P/inv*100:0,cl(P),'p')+card('Value ratio',inv?cur/inv:0,cl(P),'r');
+ $('sum').querySelectorAll('b').forEach(b=>count(b,+b.dataset.v,F[b.dataset.f]));
+ const mx=Math.max(1,...ok.map(o=>Math.abs(o.pc)));
+ $('bars').innerHTML=ok.map(o=>`<div class=bar><span>${o.x?.s||o.s}</span><i class="${o.pc<0?'l':''}" style="--w:${Math.abs(o.pc)/mx*60+2}%"></i><span class=${cl(o.pc)}>${sg(o.pc)}%</span></div>`).join('');
+ forecast(ok,inv,cur,P)}
+
+function forecast(ok,inv,cur,P){
+ if(!ok.length)return;const N=Math.min(...ok.map(o=>o.d.closes.length));if(N<20)return;
+ const hist=Array.from({length:N},(_,i)=>ok.reduce((s,o)=>s+o.q*o.d.closes[o.d.closes.length-N+i],0)),H=+$('hz').value,S=simulate(hist,cur,H);
+ const exp=mean(Array.from(S.fin)),pp=S.fin.filter(v=>v>inv).length/S.fin.length*100;
+ $('chart').innerHTML=chart(hist,S,inv);
+ const card=(a,v,c,fm)=>`<div class=k><span class=mu>${a}</span><b class="${c}" data-v="${v}" data-f="${fm}">0</b></div>`,F={p:v=>v.toFixed(1)+'%',s:sg};
+ $('fc').innerHTML=card('Probability of profit',pp,pp>=50?'g':'r','p')+card('Expected P/L',exp-inv,cl(exp-inv),'s')+card('Best case (95%)',S.p95.at(-1)-inv,'g','s')+card('Worst case (5%)',S.p5.at(-1)-inv,'r','s')+card('Annual volatility',S.s*Math.sqrt(252)*100,'','p');
+ $('fc').querySelectorAll('b').forEach(b=>count(b,+b.dataset.v,F[b.dataset.f]));
+ ctx={holdings:ok.map(o=>({symbol:o.s,qty:o.q,buyPrice:o.b,nowPrice:o.d.price,plPct:+o.pc.toFixed(2),annualVolPct:+o.vol.toFixed(1),avgDailyReturnPct:+o.dr.toFixed(3)})),
+  portfolio:{invested:inv,current:cur,plAmount:P,plPct:+(P/inv*100).toFixed(2)},
+  forecast:{tradingDays:H,probProfitPct:+pp.toFixed(1),expectedPL:+(exp-inv).toFixed(0),p5PL:+(S.p5[H]-inv).toFixed(0),medianPL:+(S.p50[H]-inv).toFixed(0),p95PL:+(S.p95[H]-inv).toFixed(0),dailyMu:S.mu,dailySigma:S.s}}}
+$('hz').onchange=render;
+
+$('an').onclick=async()=>{if(!ctx)return alert('Add at least one stock first');const a=$('ai');a.style.display='block';a.className='load';a.textContent='Analyzing the selected stocks…';
+ try{const r=await(await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(ctx)})).json();a.className='';a.textContent=r.text}
+ catch{a.className='';a.textContent='Could not reach the analysis service.'}};
+
+market();render();setInterval(market,60000);
+</script></body></html>
