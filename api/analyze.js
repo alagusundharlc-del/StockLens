@@ -1,6 +1,7 @@
 // Vercel serverless function. AI provider is chosen by whichever key you set in Vercel env vars (first match wins):
 // GEMINI_API_KEY | GROQ_API_KEY | OPENAI_API_KEY | ANTHROPIC_API_KEY   (optional: AI_MODEL to override the model)
 const E = process.env;
+const transientGeminiError = e => /\b(429|500|502|503|504)\b|RESOURCE_EXHAUSTED|UNAVAILABLE|overload|high demand/i.test(`${e?.status || ''} ${e?.message || e}`);
 const post = async (url, headers, body) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) })).json();
 const openai = (url, key, model) => async p => {
   const j = await post(url, { Authorization: 'Bearer ' + key }, { model: E.AI_MODEL || model, messages: [{ role: 'user', content: p }] });
@@ -10,8 +11,16 @@ const PROVIDERS = [
   ['GEMINI_API_KEY', async p => {
     const { GoogleGenAI } = await import('@google/genai');   // official SDK, reads GEMINI_API_KEY automatically
     const ai = new GoogleGenAI({});
-    const r = await ai.models.generateContent({ model: E.AI_MODEL || 'gemini-flash-latest', contents: p });
-    return r.text;
+    const models = [...new Set([E.AI_MODEL || 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.5-flash-lite'])];
+    for (let i = 0; i < models.length; i++) {
+      try {
+        const r = await ai.models.generateContent({ model: models[i], contents: p });
+        if (!r.text) throw new Error('Gemini returned an empty response.');
+        return r.text;
+      } catch (e) {
+        if (!transientGeminiError(e) || i === models.length - 1) throw e;
+      }
+    }
   }],
   ['GROQ_API_KEY', openai('https://api.groq.com/openai/v1/chat/completions', E.GROQ_API_KEY, 'llama-3.3-70b-versatile')],
   ['OPENAI_API_KEY', openai('https://api.openai.com/v1/chat/completions', E.OPENAI_API_KEY, 'gpt-4o-mini')],
@@ -34,5 +43,10 @@ Reply in concise markdown, under 220 words:
 End with "Not financial advice."`;
   const p = PROVIDERS.find(([k]) => E[k]);
   if (!p) return res.json({ text: 'No AI key found. Add GEMINI_API_KEY (or GROQ_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY) in Vercel → Settings → Environment Variables, then redeploy.' });
-  try { res.json({ text: await p[1](prompt) }); } catch (e) { res.status(500).json({ text: 'AI error: ' + e.message }); }
+  try { res.json({ text: await p[1](prompt) }); } catch (e) {
+    const temporarilyUnavailable = p[0] === 'GEMINI_API_KEY' && transientGeminiError(e);
+    res.status(temporarilyUnavailable ? 503 : 500).json({
+      text: temporarilyUnavailable ? 'Gemini is temporarily busy. Please try again shortly.' : 'AI error: ' + e.message
+    });
+  }
 };
