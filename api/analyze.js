@@ -34,12 +34,14 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end();
   const prompt = `You are a quantitative stock analyst. Data below comes from applied statistics (log-return mean/volatility) and a Monte Carlo Geometric Brownian Motion simulation (2000 stochastic paths).
 ${JSON.stringify(req.body)}
-Reply in concise markdown, under 220 words:
-1) Current profit/loss with percentages
-2) Forecast: distinguish expectedPL (mean) from medianPL (median). Explain p5PL and p95PL as percentiles, never as caps, limits, guarantees, or worst/best possible outcomes. Describe probProfitPct as a probability within this simulation, not certainty.
-3) Risk: volatility and diversification
-4) Per-stock outlook (Bullish/Neutral/Bearish + one-line reason) based only on supplied statistics.
-5) One general risk-management suggestion.
+Reply as a concise markdown report, under 180 words, using these headings:
+## Current P/L
+## Forecast
+## Risk
+## Per-stock outlook
+## Risk management
+Distinguish expectedPL (mean) from medianPL (median). Explain p5PL and p95PL as percentiles, never as caps, limits, guarantees, or worst/best possible outcomes. Describe probProfitPct as a probability within this simulation, not certainty.
+Use short, factual paragraphs or bullets. Base outlook only on supplied statistics.
 Use only the supplied data; do not invent market facts, news, causes, or correlations. Describe historical statistics as estimates, not evidence of future momentum. If diversification cannot be assessed from the data, say so.
 End with "Not financial advice."`;
   const p = PROVIDERS.find(([k]) => E[k]);
