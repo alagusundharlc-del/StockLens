@@ -1,6 +1,8 @@
 # StockLens — open-source stock analyzer
 
-Search stocks, add 2–3 companies, see profit/loss, a Monte Carlo forecast and an AI analysis.
+Search stocks, set investment preferences, and filter the market watch by six-month return and annualized volatility. Add companies to a portfolio to see profit/loss, a Monte Carlo forecast, and an AI analysis. On desktop, search and preference inputs are on the left, with matching stocks and portfolio charts on the right; the layout stacks on smaller screens.
+
+The screener compares the market-watch stocks against historical six-month return and annualized volatility estimates. Conservative, balanced, and growth preferences set maximum volatility levels of 25%, 45%, and 80%, respectively. The minimum six-month return is adjustable, and preferences are saved in the browser. Historical performance is not a prediction of future results.
 
 ## Structure
 ```
